@@ -1,1 +1,1 @@
-# product-service
+# pulsar-api-template
