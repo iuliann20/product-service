@@ -1,16 +1,13 @@
 ﻿using ProductService.Domain.Primitives;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProductService.Domain.Entities
 {
-    public class ProductImage : Entity
+    public sealed class ProductImage : Entity
     {
         public Guid ProductId { get; set; }
+        public string ImageUrl { get; set; } = default!;
+        public bool IsMain { get; set; } = false;
 
-        [ForeignKey("ProductId")]
-        public Product Product { get; set; }
-
-        public string ImageUrl { get; set; }
-        public bool IsMain { get; set; }
+        public Product Product { get; set; } = default!;
     }
 }

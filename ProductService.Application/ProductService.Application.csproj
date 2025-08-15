@@ -16,9 +16,4 @@
     <ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Commands\" />
-    <Folder Include="Queries\" />
-  </ItemGroup>
-
 </Project>

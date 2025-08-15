@@ -2,11 +2,12 @@
 
 namespace ProductService.Domain.Entities
 {
-    public class Category : Entity
+    public sealed class Category : Entity
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; } = default!;
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
 
-        public ICollection<Product> Products { get; set; }
+        public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

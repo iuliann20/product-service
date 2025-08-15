@@ -1,23 +1,17 @@
 ﻿using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using ProductService.Application;
 using ProductService.Application.Behaviors;
 using ProductService.Domain.Repositories;
 using ProductService.Domain.Services;
 using ProductService.Domain.Shared;
 using ProductService.Domain.Shared.Settings;
-using ProductService.Helpers;
 using ProductService.Infrastructure.Messaging.MassTransitConfig;
 using ProductService.Infrastructure.Services;
 using ProductService.Persistence;
+using ProductService.Persistence.Repositories;
 using ProductService.Persistence.UnitOfWork;
-using Serilog;
-using Serilog.Sinks.Elasticsearch;
-using System.Text;
 
 namespace ProductService.DependencyInjection
 {
@@ -49,6 +43,10 @@ namespace ProductService.DependencyInjection
             services.AddMemoryCache();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductImageRepository, ProductImageRepository>();
+
             return services;
         }
 

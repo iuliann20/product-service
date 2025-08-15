@@ -1,17 +1,12 @@
 ﻿using Asp.Versioning;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Abstractions;
-using ProductService.Contracts.Authentication;
 using ProductService.Domain.Services;
-using ProductService.Domain.Services.Models.Authentication;
-using ProductService.Helpers;
 
 namespace ProductService.Controllers
 {
     [ApiVersion(1.0)]
-    [ApiVersion(1.1)]
     [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthenticationController : ApiController
     {
