@@ -11,6 +11,7 @@ using ProductService.Domain.Services;
 using ProductService.Domain.Shared;
 using ProductService.Domain.Shared.Settings;
 using ProductService.Helpers;
+using ProductService.Infrastructure.Messaging.MassTransitConfig;
 using ProductService.Infrastructure.Services;
 using ProductService.Persistence;
 using ProductService.Persistence.UnitOfWork;
@@ -26,7 +27,7 @@ namespace ProductService.DependencyInjection
         {
             services.AddMediatR(config =>
             {
-                config.RegisterServicesFromAssembly(AssemblyReference.Assembly);
+                config.RegisterServicesFromAssembly(Application.AssemblyReference.Assembly);
                 config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
             });
 
@@ -98,6 +99,7 @@ namespace ProductService.DependencyInjection
             services.AddTransient<IAESEncryptionService, AESEncryptionService>();
             services.Configure<TokenManagement>(configuration.GetSection("TokenManagement"));
             services.AddHttpContextAccessor();
+            services.AddMessaging(configuration);
             return services;
         }
 

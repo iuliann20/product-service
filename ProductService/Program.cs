@@ -2,6 +2,7 @@ using Asp.Versioning.ApiExplorer;
 using ProductService.Configuration;
 using ProductService.DependencyInjection;
 using ProductService.Helpers;
+using ProductService.Infrastructure.Services;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -22,6 +23,8 @@ try
 
     builder.Services.AddPersistence(builder.Configuration);
 
+    builder.Services.AddHealthChecks();
+
     builder.Services.AddJwtAuthentication(builder.Configuration);
 
     builder.Services.AddControllers(options =>
@@ -38,6 +41,7 @@ try
 
     if (app.Environment.IsDevelopment())
     {
+        app.UseHttpsRedirection();
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
@@ -50,8 +54,6 @@ try
         });
     }
     app.ApplyMigrations();
-
-    app.UseHttpsRedirection();
 
     app.UseSerilogRequestLogging();
 

@@ -43,7 +43,7 @@ namespace ProductService.IntegrationTests.Configure
                 services.AddScoped<IUnitOfWork>(provider =>
                 {
                     var dbContext = provider.GetRequiredService<ProductServiceDbContext>();
-                    return new UnitOfWork(dbContext, false);
+                    return new UnitOfWork(dbContext);
                 });
 
                 services.AddScoped<DbContext, ProductServiceDbContext>();

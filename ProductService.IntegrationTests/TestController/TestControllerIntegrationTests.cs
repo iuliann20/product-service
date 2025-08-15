@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Newtonsoft.Json;
-using ProductService.Contracts.Test;
 using ProductService.IntegrationTests.Configure;
 using ProductService.IntegrationTests.MockData;
 using System.Text;
@@ -25,7 +24,7 @@ namespace ProductService.IntegrationTests.TestController
         {
             var id = await TestMockData.InsertDataWithDbContext(_factory);
 
-            var testRequest = new TestRequest { Id = 1 };
+            var testRequest = new List<int>();
 
             var testRequestData = new StringContent(JsonConvert.SerializeObject(testRequest), Encoding.UTF8, "application/json");
 

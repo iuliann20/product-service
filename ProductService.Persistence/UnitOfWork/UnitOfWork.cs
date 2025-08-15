@@ -1,51 +1,80 @@
-﻿using ProductService.Domain.Repositories;
-using ProductService.Persistence.Repositories;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using ProductService.Domain.Primitives;
+using ProductService.Domain.Repositories;
+using ProductService.Persistence.Outbox;
 
 namespace ProductService.Persistence.UnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    public sealed class UnitOfWork : IUnitOfWork
     {
         private readonly ProductServiceDbContext _dbContext;
 
-        private readonly bool _useTransactions;
-        private ITestRepository _testRepository;
-
-        public UnitOfWork(ProductServiceDbContext dbContext, bool useTransactions = true)
+        public UnitOfWork(ProductServiceDbContext dbContext)
         {
             _dbContext = dbContext;
-            _useTransactions = useTransactions;
         }
 
-        public ITestRepository TestRepository => _testRepository ??= new TestRepository(_dbContext);
-
-
-        public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
+        public Task SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            if (_useTransactions)
-            {
-                using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                try
-                {
-                    int affectedRows = await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return affectedRows;
-                }
-                catch
-                {
-                    _dbContext.Database.RollbackTransaction();
-                    throw;
-                }
-            }
-            else
-            {
-                return await _dbContext.SaveChangesAsync(cancellationToken);
-            }
+            ConvertDomainEventsToOutboxMessages();
+            UpdateAuditableEntities();
+
+            return _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public void Dispose()
+        private void ConvertDomainEventsToOutboxMessages()
         {
-            _dbContext?.Dispose();
-            GC.SuppressFinalize(this);
+            var outboxMessages = _dbContext.ChangeTracker
+                .Entries<AggregateRoot>()
+                .Select(x => x.Entity)
+                .SelectMany(aggregateRoot =>
+                {
+                    IReadOnlyCollection<IDomainEvent> domainEvents = aggregateRoot.GetDomainEvents();
+
+                    aggregateRoot.ClearDomainEvents();
+
+                    return domainEvents;
+                })
+                .Select(domainEvent => new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    Type = domainEvent.GetType().Name,
+                    Content = JsonConvert.SerializeObject(
+                        domainEvent,
+                        new JsonSerializerSettings
+                        {
+                            TypeNameHandling = TypeNameHandling.All
+                        })
+                })
+                .ToList();
+
+            _dbContext.Set<OutboxMessage>().AddRange(outboxMessages);
+        }
+
+        private void UpdateAuditableEntities()
+        {
+            IEnumerable<EntityEntry<IAuditableEntity>> entries =
+                _dbContext
+                    .ChangeTracker
+                    .Entries<IAuditableEntity>();
+
+            foreach (EntityEntry<IAuditableEntity> entityEntry in entries)
+            {
+                if (entityEntry.State == EntityState.Added)
+                {
+                    entityEntry.Property(a => a.CreatedOnUtc)
+                        .CurrentValue = DateTime.UtcNow;
+                }
+
+                if (entityEntry.State == EntityState.Modified)
+                {
+                    entityEntry.Property(a => a.ModifiedOnUtc)
+                        .CurrentValue = DateTime.UtcNow;
+                }
+            }
         }
     }
 }

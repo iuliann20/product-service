@@ -5,17 +5,18 @@ services:
       context: .
       dockerfile: ProductService/Dockerfile
     ports:
-      - "6000:8080"
+      - "6001:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Database: "MGVjFy6QSHXki3MRcapeQD+Pukx1RTR+T71/H1J2/m0lA1xgd+yex8l7swd5qN2lXMjHSew2osrL21v3z80Ss19eIhtcfnjj3OmpiuRcaAA9nJ1yCqDyMJvknhE5bCc/WVJLCkA1myhONBGFMYJy8A=="
-      RabbitMq__Host: rabbitmq
-      RabbitMq__Username: guest
-      RabbitMq__Password: guest
-      RabbitMq__VirtualHost: /
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__Database: "MGVjFy6QSHXki3MRcapeQPbUfCB2kXjCtnmqTrvzIvFM1e9M6YLJeFDVyuwKz3tJE/ebK95OmnDGj5tbBjsigP5EpVioYaafYVQZn0B5Xf2vBZgJRZ4GqmmR9v6a6iIGmvmL/FxtVrrVaxbyWlj45w=="
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      RabbitMq__VirtualHost: "/"
     networks:
       - ecommerce
 
 networks:
-    ecommerce:
-        external: true
+  ecommerce:
+    external: true

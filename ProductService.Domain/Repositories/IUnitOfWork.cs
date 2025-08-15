@@ -1,8 +1,7 @@
 ﻿namespace ProductService.Domain.Repositories
 {
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork
     {
-        ITestRepository TestRepository { get; }
-        Task<int> CommitAsync(CancellationToken cancellationToken = default);
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
