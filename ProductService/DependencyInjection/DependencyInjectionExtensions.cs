@@ -51,30 +51,6 @@ namespace ProductService.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
-        {
-            var token = configuration.GetSection("TokenManagement").Get<TokenManagement>();
-
-            var secret = Encoding.ASCII.GetBytes(token.Secret);
-
-            services.AddAuthentication()
-                .AddJwtBearer(cfg =>
-                {
-                    cfg.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(secret),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true
-                    };
-                });
-
-            services.AddAuthorization(options => { PoliciesHandler.SetPolicies(options); });
-
-            return services;
-        }
-
         public static IServiceProvider ConfigureLogging(this IServiceProvider services, IConfiguration configuration)
         {
 

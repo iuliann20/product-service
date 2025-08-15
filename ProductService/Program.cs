@@ -18,8 +18,6 @@ try
 
     builder.Services.AddAplication();
 
-    builder.Services.ConfigureAuthentication(builder.Configuration);
-
     builder.Services.RegisterServices(builder.Configuration);
 
     builder.Services.AddPersistence(builder.Configuration);
