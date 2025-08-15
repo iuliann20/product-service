@@ -1,0 +1,21 @@
+services:
+  productservice:
+    image: ${DOCKER_REGISTRY-}productservice
+    build:
+      context: .
+      dockerfile: ProductService/Dockerfile
+    ports:
+      - "6000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: "MGVjFy6QSHXki3MRcapeQD+Pukx1RTR+T71/H1J2/m0lA1xgd+yex8l7swd5qN2lXMjHSew2osrL21v3z80Ss19eIhtcfnjj3OmpiuRcaAA9nJ1yCqDyMJvknhE5bCc/WVJLCkA1myhONBGFMYJy8A=="
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: guest
+      RabbitMq__Password: guest
+      RabbitMq__VirtualHost: /
+    networks:
+      - ecommerce
+
+networks:
+    ecommerce:
+        external: true

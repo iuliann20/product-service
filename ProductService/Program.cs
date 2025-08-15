@@ -1,4 +1,5 @@
 using Asp.Versioning.ApiExplorer;
+using ProductService.Configuration;
 using ProductService.DependencyInjection;
 using ProductService.Helpers;
 using Serilog;
@@ -22,6 +23,8 @@ try
     builder.Services.RegisterServices(builder.Configuration);
 
     builder.Services.AddPersistence(builder.Configuration);
+
+    builder.Services.AddJwtAuthentication(builder.Configuration);
 
     builder.Services.AddControllers(options =>
     {
@@ -54,9 +57,11 @@ try
 
     app.UseSerilogRequestLogging();
 
+    app.UseAuthentication();  
     app.UseAuthorization();
 
     app.MapControllers();
+    app.MapHealthChecks("/health");
 
     app.Run();
 }
