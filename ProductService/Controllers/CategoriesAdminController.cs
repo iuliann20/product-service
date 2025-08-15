@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Abstractions;
 using ProductService.Application.Commands.Categories.CreateCategory;
@@ -17,6 +18,7 @@ namespace ProductService.Controllers
         {
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateCategoryRequest req, CancellationToken ct)
         {
@@ -25,6 +27,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? Ok(response.Value) : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("edit/{id:guid}")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCategoryRequest req, CancellationToken ct)
         {
@@ -33,6 +36,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? NoContent() : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken ct)
         {

@@ -36,6 +36,12 @@ try
 
     builder.Services.AddEndpointsApiExplorer();
 
+    builder.Services.AddStackExchangeRedisCache(opt =>
+    {
+        opt.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "redis:6379";
+        opt.InstanceName = "productsvc:";
+    });
+
     var app = builder.Build();
     app.Services.ConfigureLogging(builder.Configuration);
 
@@ -57,7 +63,8 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseAuthentication();  
+    app.UseAuthentication();
+   // app.UseMiddleware<ProductService.Infrastructure.Errors.ProblemDetailsMiddleware>();
     app.UseAuthorization();
 
     app.MapControllers();

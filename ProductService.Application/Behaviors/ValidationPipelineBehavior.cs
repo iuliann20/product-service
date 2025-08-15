@@ -4,59 +4,26 @@ using ProductService.Domain.Shared;
 
 namespace ProductService.Application.Behaviors
 {
-    public class ValidationPipelineBehavior<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-    where TResponse : Result
+    public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-        public ValidationPipelineBehavior(IEnumerable<IValidator<TRequest>> validators) =>
-            _validators = validators;
+        public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators) => _validators = validators;
 
-        public async Task<TResponse> Handle(
-            TRequest request,
-            RequestHandlerDelegate<TResponse> next,
-            CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
         {
-            if (!_validators.Any())
+            if (_validators.Any())
             {
-                return await next();
-            }
+                var ctx = new ValidationContext<TRequest>(request);
+                var results = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(ctx, ct)));
+                var failures = results.SelectMany(r => r.Errors).Where(f => f is not null).ToList();
 
-            Error[] errors = _validators
-                .Select(validator => validator.Validate(request))
-                .SelectMany(validationResult => validationResult.Errors)
-                .Where(validationFailure => validationFailure is not null)
-                .Select(failure => new Error(
-                    failure.PropertyName,
-                    failure.ErrorMessage))
-                .Distinct()
-                .ToArray();
-
-            if (errors.Length != 0)
-            {
-                return CreateValidationResult<TResponse>(errors);
+                if (failures.Count != 0)
+                    throw new ValidationException(failures);
             }
 
             return await next();
-        }
-
-        private static TResult CreateValidationResult<TResult>(Error[] errors)
-            where TResult : Result
-        {
-            if (typeof(TResult) == typeof(Result))
-            {
-                return (ValidationResult.WithErrors(errors) as TResult)!;
-            }
-
-            object validationResult = typeof(ValidationResult<>)
-                .GetGenericTypeDefinition()
-                .MakeGenericType(typeof(TResult).GenericTypeArguments[0])
-                .GetMethod(nameof(ValidationResult.WithErrors))!
-                .Invoke(null, [errors])!;
-
-            return (TResult)validationResult;
         }
     }
 }

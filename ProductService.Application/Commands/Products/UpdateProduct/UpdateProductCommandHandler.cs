@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 using ProductService.Application.Abstractions.Messaging;
-using ProductService.Application.Contracts.IntegrationEvents;
+using ProductService.Domain.Caching;
 using ProductService.Domain.Repositories;
 using ProductService.Domain.Shared;
 
@@ -10,26 +10,23 @@ namespace ProductService.Application.Commands.Products.UpdateProduct
     {
         private readonly IProductRepository _products;
         private readonly IUnitOfWork _uow;
-        private readonly IPublishEndpoint _publisher;
+        private readonly ICatalogCache _cache;
 
-        public UpdateProductCommandHandler(IProductRepository products, IUnitOfWork uow, IPublishEndpoint publisher)
+        public UpdateProductCommandHandler(IProductRepository products, IUnitOfWork uow, ICatalogCache cache)
         {
-            _products = products; _uow = uow; _publisher = publisher;
+            _products = products;
+            _uow = uow; _cache = cache;
         }
+
 
         public async Task<Result> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
             var product = await _products.GetByIdAsync(request.Id, cancellationToken) ?? throw new InvalidOperationException("Product not found.");
-            product.Name = request.Name;
-            product.Description = request.Description;
-            product.SetPrice(request.Price);
-            product.CategoryId = request.CategoryId;
-            product.IsActive = request.IsActive;
+
+            product.Update(request.Name, request.Description, request.Price, request.CategoryId, request.IsActive);
 
             await _uow.SaveChangesAsync(cancellationToken);
-
-            await _publisher.Publish(new ProductUpdatedIntegrationEvent(
-                product.Id, product.Name, product.CategoryId, product.Price, product.IsActive, DateTime.UtcNow), cancellationToken);
+            await _cache.InvalidateProductAsync(product.Id, cancellationToken);
 
             return Result.Success();
         }

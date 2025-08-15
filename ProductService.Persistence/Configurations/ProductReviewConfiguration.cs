@@ -9,11 +9,14 @@ namespace ProductService.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ProductReview> builder)
         {
-            builder.ToTable(TableNames.ProductReviews);
-
+            builder.ToTable("ProductReviews");
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.Comment).IsRequired();
+            builder.Property(x => x.Rating).IsRequired();
+            builder.Property(x => x.Comment).HasMaxLength(2000);
+            builder.Property(x => x.Status).IsRequired();
+
+            builder.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId);
         }
     }
 }

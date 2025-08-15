@@ -1,4 +1,5 @@
 ﻿using ProductService.Application.Abstractions.Messaging;
+using ProductService.Domain.Caching;
 using ProductService.Domain.Entities;
 using ProductService.Domain.Repositories;
 using ProductService.Domain.Shared;
@@ -10,12 +11,14 @@ namespace ProductService.Application.Commands.Products.Images.AddImage
         private readonly IProductRepository _products;
         private readonly IProductImageRepository _images;
         private readonly IUnitOfWork _uow;
+        private readonly ICatalogCache _cache;
 
-        public AddProductImageCommandHandler(IProductRepository products, IProductImageRepository images, IUnitOfWork uow)
+        public AddProductImageCommandHandler(IProductRepository products, IProductImageRepository images, IUnitOfWork uow, ICatalogCache cache)
         {
             _products = products;
             _images = images;
             _uow = uow;
+            _cache = cache;
         }
 
         public async Task<Result<Guid>> Handle(AddProductImageCommand request, CancellationToken cancellationToken)
@@ -30,6 +33,8 @@ namespace ProductService.Application.Commands.Products.Images.AddImage
             await _images.AddAsync(img, cancellationToken);
 
             await _uow.SaveChangesAsync(cancellationToken);
+
+            await _cache.InvalidateProductAsync(product.Id, cancellationToken);
 
             return Result.Create(img.Id);
         }

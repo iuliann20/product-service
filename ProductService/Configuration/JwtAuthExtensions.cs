@@ -29,13 +29,13 @@ namespace ProductService.Configuration
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.FromSeconds(30),
 
-                        // IMPORTANT pt. [Authorize(Roles="Admin")] & userId
                         RoleClaimType = ClaimTypes.Role,
-                        NameClaimType = "sub" // noi am pus sub în tokenul emis de UserService
+                        NameClaimType = "sub" 
                     };
                 });
 
-            services.AddAuthorization(); // poți adăuga politici dacă vrei
+            services.AddAuthorization(o =>
+               o.AddPolicy("AdminOnly", p => p.RequireRole("Admin")));
 
             return services;
         }

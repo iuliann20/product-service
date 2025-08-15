@@ -6,5 +6,6 @@
         internal const string Categories = nameof(Categories);
         internal const string ProductImages = nameof(ProductImages);
         internal const string ProductReviews = nameof(ProductReviews);
+        internal const string OutboxMessages = nameof(OutboxMessages);
     }
 }

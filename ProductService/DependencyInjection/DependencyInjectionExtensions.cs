@@ -1,13 +1,17 @@
 ﻿using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ProductService.Application.Behaviors;
+using ProductService.Domain.Caching;
 using ProductService.Domain.Repositories;
 using ProductService.Domain.Services;
 using ProductService.Domain.Shared;
 using ProductService.Domain.Shared.Settings;
+using ProductService.Infrastructure.Caching;
 using ProductService.Infrastructure.Messaging.MassTransitConfig;
+using ProductService.Infrastructure.Outbox;
 using ProductService.Infrastructure.Services;
 using ProductService.Persistence;
 using ProductService.Persistence.Repositories;
@@ -22,7 +26,7 @@ namespace ProductService.DependencyInjection
             services.AddMediatR(config =>
             {
                 config.RegisterServicesFromAssembly(Application.AssemblyReference.Assembly);
-                config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
+                services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
 
             return services;
@@ -46,6 +50,7 @@ namespace ProductService.DependencyInjection
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
+            services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
 
             return services;
         }
@@ -93,10 +98,10 @@ namespace ProductService.DependencyInjection
 
         public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddTransient<IAuthenticationService, AuthenticationService>();
             services.AddTransient<IAESEncryptionService, AESEncryptionService>();
-            services.Configure<TokenManagement>(configuration.GetSection("TokenManagement"));
             services.AddHttpContextAccessor();
+            services.AddHostedService<OutboxDispatcher>();
+            services.AddSingleton<ICatalogCache, CatalogCache>();
             services.AddMessaging(configuration);
             return services;
         }

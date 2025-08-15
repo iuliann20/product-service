@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Abstractions;
 using ProductService.Application.Commands.Products.AdjustStock;
@@ -19,7 +20,8 @@ namespace ProductService.Controllers
         {
         }
 
-        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest req, CancellationToken ct)
         {
             var response = await Sender.Send(new CreateProductCommand(req.Name, req.Description, req.Price, req.CategoryId, req.StockQuantity, req.IsActive), ct);
@@ -27,6 +29,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? Ok(response.Value) : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("edit/{id:guid}")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateProductRequest req, CancellationToken ct)
         {
@@ -35,6 +38,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? NoContent() : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("stock/{id:guid}")]
         public async Task<IActionResult> AdjustStock([FromRoute] Guid id, [FromBody] AdjustStockRequest req, CancellationToken ct)
         {
@@ -43,6 +47,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? Ok(response.Value) : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("images/{id:guid}")]
         public async Task<IActionResult> AddImage([FromRoute] Guid id, [FromBody] AddImageRequest req, CancellationToken ct)
         {
@@ -51,6 +56,7 @@ namespace ProductService.Controllers
             return response.IsSuccess ? Ok(response.Value) : HandleFailure(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("images/{id:guid}/{imageId:guid}")]
         public async Task<IActionResult> RemoveImage([FromRoute] Guid id, [FromRoute] Guid imageId, CancellationToken ct)
         {

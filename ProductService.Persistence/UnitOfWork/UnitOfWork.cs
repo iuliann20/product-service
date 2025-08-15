@@ -26,30 +26,38 @@ namespace ProductService.Persistence.UnitOfWork
 
         private void ConvertDomainEventsToOutboxMessages()
         {
-            var outboxMessages = _dbContext.ChangeTracker
+            var domainEvents = _dbContext.ChangeTracker
                 .Entries<AggregateRoot>()
-                .Select(x => x.Entity)
-                .SelectMany(aggregateRoot =>
+                .Select(e => e.Entity)
+                .SelectMany(ar =>
                 {
-                    IReadOnlyCollection<IDomainEvent> domainEvents = aggregateRoot.GetDomainEvents();
-
-                    aggregateRoot.ClearDomainEvents();
-
-                    return domainEvents;
+                    var events = ar.GetDomainEvents();
+                    ar.ClearDomainEvents();
+                    return events;
                 })
-                .Select(domainEvent => new OutboxMessage
+                .ToList();
+
+            if (!domainEvents.Any()) return;
+
+            var outboxMessages = new List<OutboxMessage>();
+
+            foreach (var de in domainEvents)
+            {
+                foreach (var ie in Outbox.DomainEventMapper.Map(de))
                 {
-                    Id = Guid.NewGuid(),
-                    OccurredOnUtc = DateTime.UtcNow,
-                    Type = domainEvent.GetType().Name,
-                    Content = JsonConvert.SerializeObject(
-                        domainEvent,
-                        new JsonSerializerSettings
+                    var type = ie.GetType(); // integration event CLR type
+                    outboxMessages.Add(new OutboxMessage
+                    {
+                        Id = Guid.NewGuid(),
+                        OccurredOnUtc = DateTime.UtcNow,
+                        Type = type.AssemblyQualifiedName!, // for deserialization
+                        Content = JsonConvert.SerializeObject(ie, new JsonSerializerSettings
                         {
                             TypeNameHandling = TypeNameHandling.All
                         })
-                })
-                .ToList();
+                    });
+                }
+            }
 
             _dbContext.Set<OutboxMessage>().AddRange(outboxMessages);
         }
