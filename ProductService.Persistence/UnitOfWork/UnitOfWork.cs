@@ -31,7 +31,7 @@ namespace ProductService.Persistence.UnitOfWork
                 .Select(e => e.Entity)
                 .SelectMany(ar =>
                 {
-                    var events = ar.GetDomainEvents();
+                    var events = ar.GetDomainEvents().ToList();
                     ar.ClearDomainEvents();
                     return events;
                 })
