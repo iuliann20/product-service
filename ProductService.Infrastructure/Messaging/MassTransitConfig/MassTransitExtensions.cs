@@ -16,8 +16,7 @@ namespace ProductService.Infrastructure.Messaging.MassTransitConfig
 
             services.AddMassTransit(x =>
             {
-                // Înregistrează toți consumerii din Infrastructure
-                x.AddConsumers(typeof(MassTransitExtensions).Assembly);
+                x.AddConsumers(AssemblyReference.Assembly);
 
                 x.AddDelayedMessageScheduler();
                 x.SetKebabCaseEndpointNameFormatter();
@@ -29,10 +28,9 @@ namespace ProductService.Infrastructure.Messaging.MassTransitConfig
                         h.Username(user);
                         h.Password(pass);
                     });
-
                     bus.UseDelayedMessageScheduler();
                     bus.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
-                    bus.UseInMemoryOutbox(context);     // protecție împotriva duplicatelor în aceeași tranzacție
+                    bus.UseInMemoryOutbox(context);     
 
                     bus.ConfigureEndpoints(context);
                 });

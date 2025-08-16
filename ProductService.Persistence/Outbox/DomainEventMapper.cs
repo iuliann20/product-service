@@ -1,5 +1,5 @@
-﻿using ProductService.Domain.Events;
-using ProductService.Domain.Events.IntegrationEvents;
+﻿using ProductService.Domain.Events.Product.Events;
+using ProductService.Domain.Events.Product.IntegrationEvents;
 using ProductService.Domain.Primitives;
 
 namespace ProductService.Persistence.Outbox

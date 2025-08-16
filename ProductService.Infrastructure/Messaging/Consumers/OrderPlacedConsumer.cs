@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
-using ProductService.Domain.Events.Order;
+using ProductService.Domain.Events.Order.IntegrationEvents;
 using ProductService.Domain.Repositories;
 
 namespace ProductService.Infrastructure.Messaging.Consumers

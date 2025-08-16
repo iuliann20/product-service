@@ -1,4 +1,4 @@
-﻿using ProductService.Domain.Events;
+﻿using ProductService.Domain.Events.Product.Events;
 using ProductService.Domain.Primitives;
 
 namespace ProductService.Domain.Entities
