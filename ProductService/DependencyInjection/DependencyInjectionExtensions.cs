@@ -39,9 +39,12 @@ namespace ProductService.DependencyInjection
             Ensure.NotNullOrWhiteSpace(connectionString);
             var encryption = new AESEncryptionService();
 
+            services.AddScoped<ProductService.Persistence.Interceptors.ConvertDomainEventsToOutboxMessagesInterceptor>();
+
             services.AddDbContext<ProductServiceDbContext>((sp, optionsBuilder) =>
             {
                 optionsBuilder.UseSqlServer(encryption.Decrypt(connectionString));
+                optionsBuilder.AddInterceptors(sp.GetRequiredService<ProductService.Persistence.Interceptors.ConvertDomainEventsToOutboxMessagesInterceptor>());
             });
 
             services.AddMemoryCache();

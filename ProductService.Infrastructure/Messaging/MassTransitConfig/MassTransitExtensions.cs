@@ -28,10 +28,10 @@ namespace ProductService.Infrastructure.Messaging.MassTransitConfig
                         h.Username(user);
                         h.Password(pass);
                     });
+                    
                     bus.UseDelayedMessageScheduler();
                     bus.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
-                    bus.UseInMemoryOutbox(context);     
-
+                    
                     bus.ConfigureEndpoints(context);
                 });
             });

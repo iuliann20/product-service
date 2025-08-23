@@ -2,4 +2,4 @@
 
 namespace ProductService.Domain.Primitives;
 
-public interface IDomainEvent { }
+public interface IDomainEvent : INotification { }

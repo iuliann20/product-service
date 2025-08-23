@@ -3,13 +3,15 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ProductService.Domain.Primitives;
 using ProductService.Persistence.Outbox;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ProductService.Persistence.Interceptors
 {
     public sealed class ConvertDomainEventsToOutboxMessagesInterceptor
       : SaveChangesInterceptor
     {
-        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
@@ -18,37 +20,54 @@ namespace ProductService.Persistence.Interceptors
 
             if (dbContext is null)
             {
-                return base.SavingChangesAsync(eventData, result, cancellationToken);
+                return await base.SavingChangesAsync(eventData, result, cancellationToken);
             }
 
-            var outboxMessages = dbContext.ChangeTracker
+            var domainEvents = dbContext.ChangeTracker
                 .Entries<AggregateRoot>()
                 .Select(x => x.Entity)
                 .SelectMany(aggregateRoot =>
                 {
-                    IReadOnlyCollection<IDomainEvent> domainEvents = aggregateRoot.GetDomainEvents();
-
+                    IReadOnlyCollection<IDomainEvent> domainEvents = aggregateRoot.GetDomainEvents().ToList();
                     aggregateRoot.ClearDomainEvents();
-
                     return domainEvents;
-                })
-                .Select(domainEvent => new OutboxMessage
-                {
-                    Id = Guid.NewGuid(),
-                    OccurredOnUtc = DateTime.UtcNow,
-                    Type = domainEvent.GetType().Name,
-                    Content = JsonConvert.SerializeObject(
-                        domainEvent,
-                        new JsonSerializerSettings
-                        {
-                            TypeNameHandling = TypeNameHandling.All
-                        })
                 })
                 .ToList();
 
-            dbContext.Set<OutboxMessage>().AddRange(outboxMessages);
+            if (!domainEvents.Any())
+            {
+                return await base.SavingChangesAsync(eventData, result, cancellationToken);
+            }
 
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+            var saveResult = await base.SavingChangesAsync(eventData, result, cancellationToken);
+
+            var outboxMessages = new List<OutboxMessage>();
+
+            foreach (var domainEvent in domainEvents)
+            {
+                foreach (var integrationEvent in DomainEventMapper.Map(domainEvent))
+                {
+                    var type = integrationEvent.GetType();
+                    outboxMessages.Add(new OutboxMessage
+                    {
+                        Id = Guid.NewGuid(),
+                        OccurredOnUtc = DateTime.UtcNow,
+                        Type = type.AssemblyQualifiedName!,
+                        Content = JsonConvert.SerializeObject(integrationEvent, new JsonSerializerSettings
+                        {
+                            TypeNameHandling = TypeNameHandling.All
+                        })
+                    });
+                }
+            }
+
+            if (outboxMessages.Any())
+            {
+                dbContext.Set<OutboxMessage>().AddRange(outboxMessages);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            return saveResult;
         }
     }
 }
